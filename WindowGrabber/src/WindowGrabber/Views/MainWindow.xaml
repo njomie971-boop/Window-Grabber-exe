@@ -74,9 +74,9 @@
                                  VerticalAlignment="Center" Margin="0,0,10,0" />
                         <TextBlock VerticalAlignment="Center">
                             <Run Text="Moniteur cible · " Foreground="{StaticResource TextSecondaryBrush}" />
-                            <Run Text="{Binding TargetMonitorLabel}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <Run Text="{Binding TargetMonitorLabel, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
                             <Run Text="   " />
-                            <Run Text="{Binding TargetMonitorDetails}" Foreground="{StaticResource TextMutedBrush}" FontSize="{StaticResource FontSizeSmall}" />
+                            <Run Text="{Binding TargetMonitorDetails, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" FontSize="{StaticResource FontSizeSmall}" />
                         </TextBlock>
                     </StackPanel>
                 </Border>
@@ -122,7 +122,7 @@
                                 <TextBlock FontWeight="SemiBold"
                                            Foreground="{StaticResource TextPrimaryBrush}">
                                     <Run Text="Moniteur " />
-                                    <Run Text="{Binding Index}" />
+                                    <Run Text="{Binding Index, Mode=OneWay}" />
                                 </TextBlock>
                                 <TextBlock Text="·" Margin="8,0"
                                            Foreground="{StaticResource TextMutedBrush}" />
@@ -134,13 +134,13 @@
                                 <TextBlock Text="·" Margin="8,0"
                                            Foreground="{StaticResource TextMutedBrush}" />
                                 <TextBlock Foreground="{StaticResource TextMutedBrush}"
-                                           Text="{Binding Connection, Converter={StaticResource ConnToText}}" />
+                                           Text="{Binding Connection, Mode=OneWay, Converter={StaticResource ConnToText}}" />
                                 <Border Margin="10,0,0,0"
                                         Background="{StaticResource AccentSoftBrush}"
                                         CornerRadius="999"
                                         Padding="6,1"
                                         VerticalAlignment="Center"
-                                        Visibility="{Binding IsPrimary, Converter={StaticResource BoolToVis}}">
+                                        Visibility="{Binding IsPrimary, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                                     <TextBlock Text="principal"
                                                Foreground="{StaticResource AccentBrush}"
                                                FontSize="{StaticResource FontSizeSmall}" />
@@ -197,7 +197,7 @@
 
             <!-- Empty state -->
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Visibility="{Binding WindowsView.IsEmpty, Converter={StaticResource BoolToVis}}">
+                        Visibility="{Binding WindowsView.IsEmpty, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="Aucune fenêtre détectée"
                            FontSize="18" FontWeight="SemiBold"
                            Foreground="{StaticResource TextSecondaryBrush}"
@@ -223,11 +223,11 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0"
                            Foreground="{StaticResource TextSecondaryBrush}">
-                    <Run Text="{Binding WindowCount}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <Run Text="{Binding WindowCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
                     <Run Text=" fenêtre(s)" />
                 </TextBlock>
                 <TextBlock Grid.Column="1"
-                           Text="{Binding StatusMessage}"
+                           Text="{Binding StatusMessage, Mode=OneWay}"
                            HorizontalAlignment="Center"
                            Foreground="{StaticResource TextMutedBrush}" />
                 <TextBlock Grid.Column="2"

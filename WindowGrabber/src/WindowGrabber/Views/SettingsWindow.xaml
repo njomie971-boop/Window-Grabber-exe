@@ -61,7 +61,7 @@
                     <TextBlock Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap">
                         Fichier journal :
                     </TextBlock>
-                    <TextBlock Text="{Binding LogFilePath}"
+                    <TextBlock Text="{Binding LogFilePath, Mode=OneWay}"
                                Foreground="{StaticResource TextMutedBrush}"
                                FontFamily="{StaticResource UiFontMono}"
                                FontSize="{StaticResource FontSizeSmall}"

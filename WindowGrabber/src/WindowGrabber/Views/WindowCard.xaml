@@ -13,11 +13,11 @@
         <conv:IsOnTargetToBrushConverter x:Key="TargetToBrush" />
     </UserControl.Resources>
 
+    <!-- Un seul Style : celui de la ressource, avec Trigger de hover -->
     <Border x:Name="Root"
-            Style="{StaticResource CardBorder}"
             Cursor="Hand"
             Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{Binding IsOnTargetMonitor, Converter={StaticResource TargetToBrush}}"
+            BorderBrush="{Binding IsOnTargetMonitor, Mode=OneWay, Converter={StaticResource TargetToBrush}}"
             BorderThickness="1"
             MouseLeftButtonUp="Root_OnMouseLeftButtonUp">
         <Border.RenderTransform>
@@ -39,7 +39,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Zone miniature -->
+            <!-- Zone miniature : fallback TOUJOURS visible ; si DWM réussit, il peint par-dessus -->
             <Border Grid.Row="0"
                     Background="#FF0E131B"
                     BorderBrush="{StaticResource BorderBrush}"
@@ -48,40 +48,40 @@
                     MinHeight="110"
                     ClipToBounds="True">
                 <Grid>
-                    <!-- DWM live thumbnail (facultatif) -->
-                    <ctrl:DwmThumbnailHost x:Name="Thumbnail"
-                                           Visibility="Collapsed" />
-
-                    <!-- Fallback: icône centrée + badge état -->
+                    <!-- Fallback icône (couche inférieure, toujours présent) -->
                     <Grid x:Name="Fallback">
-                        <Image Source="{Binding Icon}"
+                        <Image Source="{Binding Icon, Mode=OneWay}"
                                Width="56" Height="56"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                RenderOptions.BitmapScalingMode="HighQuality"
-                               Visibility="{Binding Icon, Converter={StaticResource NullToVis}}" />
+                               Visibility="{Binding Icon, Mode=OneWay, Converter={StaticResource NullToVis}}" />
                         <TextBlock Text="■"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"
                                    FontSize="36"
                                    Foreground="{StaticResource TextMutedBrush}"
-                                   Visibility="{Binding Icon, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
+                                   Visibility="{Binding Icon, Mode=OneWay, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
                     </Grid>
 
-                    <!-- Badge d'état en haut à droite -->
+                    <!-- DWM live thumbnail : couche supérieure, réserve l'espace et DWM peint à ces coordonnées -->
+                    <ctrl:DwmThumbnailHost x:Name="Thumbnail" />
+
+                    <!-- Badges par-dessus tout -->
                     <Border HorizontalAlignment="Right" VerticalAlignment="Top"
                             Margin="6"
-                            Style="{StaticResource Badge}">
-                        <TextBlock Text="{Binding StateLabel}"
+                            Style="{StaticResource Badge}"
+                            Panel.ZIndex="10">
+                        <TextBlock Text="{Binding StateLabel, Mode=OneWay}"
                                    FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{StaticResource TextSecondaryBrush}" />
                     </Border>
 
-                    <!-- Indicateur "moniteur cible" -->
                     <Border HorizontalAlignment="Left" VerticalAlignment="Top"
                             Margin="6"
                             Style="{StaticResource BadgeAccent}"
-                            Visibility="{Binding IsOnTargetMonitor, Converter={StaticResource BoolToVis}}">
+                            Panel.ZIndex="10"
+                            Visibility="{Binding IsOnTargetMonitor, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="sur moniteur cible"
                                    FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{StaticResource AccentBrush}" />
@@ -91,24 +91,25 @@
 
             <!-- Titre + meta -->
             <StackPanel Grid.Row="1" Margin="2,10,2,0">
-                <TextBlock Text="{Binding Title}"
+                <TextBlock Text="{Binding Title, Mode=OneWay}"
                            FontSize="{StaticResource FontSizeBody}"
                            FontWeight="SemiBold"
                            Foreground="{StaticResource TextPrimaryBrush}"
                            TextTrimming="CharacterEllipsis"
-                           MaxLines="1" />
+                           TextWrapping="NoWrap" />
                 <Grid Margin="0,6,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0"
-                               Text="{Binding ProcessName}"
+                               Text="{Binding ProcessName, Mode=OneWay}"
                                FontSize="{StaticResource FontSizeSmall}"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               TextTrimming="CharacterEllipsis" />
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" />
                     <Border Grid.Column="1" Style="{StaticResource Badge}">
-                        <TextBlock Text="{Binding MonitorLabel}"
+                        <TextBlock Text="{Binding MonitorLabel, Mode=OneWay}"
                                    FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{StaticResource AccentBrush}"
                                    FontWeight="SemiBold" />

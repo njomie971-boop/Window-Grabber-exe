@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using WindowGrabber.Models;
 using WindowGrabber.ViewModels;
 
 namespace WindowGrabber.Views;
@@ -41,16 +42,12 @@ public partial class WindowCard : UserControl
         if (DataContext is not WindowItemViewModel vm)
         {
             Thumbnail.SourceHandle = IntPtr.Zero;
-            Thumbnail.Visibility = Visibility.Collapsed;
-            Fallback.Visibility = Visibility.Visible;
             return;
         }
 
-        // Les fenêtres minimisées ne rendent pas de thumbnail DWM utile → fallback icône
-        bool canThumb = LiveThumbnails && vm.State != Models.WindowDisplayState.Minimized;
+        // Les fenêtres minimisées n'ont pas de thumbnail DWM utile → on se contente du fallback (toujours visible)
+        bool canThumb = LiveThumbnails && vm.State != WindowDisplayState.Minimized;
         Thumbnail.SourceHandle = canThumb ? vm.Handle : IntPtr.Zero;
-        Thumbnail.Visibility = canThumb ? Visibility.Visible : Visibility.Collapsed;
-        Fallback.Visibility = canThumb ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void Root_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)

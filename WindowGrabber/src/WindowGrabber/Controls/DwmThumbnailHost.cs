@@ -1,26 +1,29 @@
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using WindowGrabber.Helpers;
 using WindowGrabber.Interop;
 
 namespace WindowGrabber.Controls;
 
 /// <summary>
-/// <see cref="HwndHost"/> qui héberge une fenêtre enfant Win32 invisible servant de support à un
-/// DWM thumbnail live de la fenêtre source. La miniature se met à jour automatiquement lors de
-/// la mise en page WPF. Si DWM n'est pas disponible ou si l'enregistrement échoue, le contrôle
-/// s'efface silencieusement — la couche UI affichera l'icône de secours.
+/// Réserve un rectangle dans la mise en page WPF et demande à DWM (Desktop Window Manager) d'y
+/// peindre la miniature live de la fenêtre source. DWM compose au-dessus de WPF, donc l'élément
+/// lui-même ne rend rien visuellement — il sert uniquement de placeholder de layout.
+///
+/// Important : DWM exige une HWND *top-level* en destination. On utilise donc la HWND de la
+/// <see cref="Window"/> WPF parente (via <see cref="PresentationSource"/>) et on calcule le
+/// rectangle dans ses coordonnées client en pixels device.
+///
+/// Toutes les erreurs sont avalées et journalisées : si DWM refuse l'enregistrement (hr != 0,
+/// ex. hr=0x80070057 E_INVALIDARG), le composant reste silencieux et le fallback (icône dessous
+/// dans la grille WPF) apparaît naturellement.
 /// </summary>
-public sealed class DwmThumbnailHost : HwndHost
+public sealed class DwmThumbnailHost : FrameworkElement
 {
-    private const string ChildClassName = "WindowGrabberDwmThumb";
-    private const int WS_CHILD = 0x40000000;
-    private const int WS_VISIBLE = 0x10000000;
-
     private IntPtr _thumb = IntPtr.Zero;
-    private IntPtr _childHwnd = IntPtr.Zero;
-    private IntPtr _parentHwnd = IntPtr.Zero;
+    private HwndSource? _hwndSource;
+    private bool _registered;
 
     public static readonly DependencyProperty SourceHandleProperty =
         DependencyProperty.Register(nameof(SourceHandle), typeof(IntPtr), typeof(DwmThumbnailHost),
@@ -32,92 +35,141 @@ public sealed class DwmThumbnailHost : HwndHost
         set => SetValue(SourceHandleProperty, value);
     }
 
+    public DwmThumbnailHost()
+    {
+        // Transparent pour les clics — on laisse WPF gérer les couches dessous (fallback)
+        IsHitTestVisible = false;
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+        LayoutUpdated += OnLayoutUpdated;
+        IsVisibleChanged += OnIsVisibleChanged;
+    }
+
     private static void OnSourceHandleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is DwmThumbnailHost host)
-            host.UpdateThumbnail();
+            host.Resync();
     }
 
-    protected override HandleRef BuildWindowCore(HandleRef hwndParent)
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        _parentHwnd = hwndParent.Handle;
-
-        EnsureClassRegistered();
-
-        _childHwnd = CreateWindowEx(
-            0, ChildClassName, "", WS_CHILD | WS_VISIBLE,
-            0, 0, 1, 1,
-            _parentHwnd, IntPtr.Zero, GetModuleHandle(null), IntPtr.Zero);
-
-        if (_childHwnd == IntPtr.Zero)
-        {
-            Logger.Warn("DwmThumbnailHost: CreateWindowEx a retourné 0");
-        }
-        else
-        {
-            UpdateThumbnail();
-        }
-
-        return new HandleRef(this, _childHwnd);
+        _hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+        Resync();
     }
 
-    protected override void DestroyWindowCore(HandleRef hwnd)
+    private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        UnregisterThumb();
-        if (_childHwnd != IntPtr.Zero)
-        {
-            DestroyWindow(_childHwnd);
-            _childHwnd = IntPtr.Zero;
-        }
+        Unregister();
+        _hwndSource = null;
     }
 
-    protected override void OnWindowPositionChanged(Rect rcBoundingBox)
-    {
-        base.OnWindowPositionChanged(rcBoundingBox);
-        UpdateThumbnail();
-    }
+    private void OnLayoutUpdated(object? sender, EventArgs e) => UpdateThumbnailRect();
 
-    protected override Size MeasureOverride(Size constraint) => constraint;
+    private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) => UpdateThumbnailRect();
 
-    private void UpdateThumbnail()
+    /// <summary>
+    /// Désinscrit puis réinscrit le thumbnail si nécessaire. Appelé quand la fenêtre source
+    /// change ou quand l'élément est chargé.
+    /// </summary>
+    private void Resync()
     {
-        if (_childHwnd == IntPtr.Zero) return;
-        if (SourceHandle == IntPtr.Zero)
-        {
-            UnregisterThumb();
-            return;
-        }
+        // Toujours désinscrire avant : source ou state a pu changer
+        Unregister();
+
+        if (_hwndSource == null || _hwndSource.Handle == IntPtr.Zero) return;
+        if (SourceHandle == IntPtr.Zero) return;
+        if (!NativeMethods.IsWindow(SourceHandle)) return;
 
         try
         {
-            if (_thumb == IntPtr.Zero)
+            int hr = NativeMethods.DwmRegisterThumbnail(_hwndSource.Handle, SourceHandle, out _thumb);
+            if (hr != 0 || _thumb == IntPtr.Zero)
             {
-                int hr = NativeMethods.DwmRegisterThumbnail(_childHwnd, SourceHandle, out _thumb);
-                if (hr != 0 || _thumb == IntPtr.Zero)
+                // hr=0x80070057 (E_INVALIDARG) peut arriver sur certaines fenêtres UWP protégées
+                // ou quand la source est cloakée. On reste silencieux : le fallback WPF prend le relais.
+                Logger.Debug($"DwmRegisterThumbnail ignoré (hr=0x{hr:X}) pour hwnd=0x{SourceHandle.ToInt64():X}");
+                _thumb = IntPtr.Zero;
+                _registered = false;
+                return;
+            }
+
+            _registered = true;
+            UpdateThumbnailRect();
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug($"DwmRegisterThumbnail exception ignorée: {ex.Message}");
+            _thumb = IntPtr.Zero;
+            _registered = false;
+        }
+    }
+
+    private void UpdateThumbnailRect()
+    {
+        if (!_registered || _thumb == IntPtr.Zero || _hwndSource == null) return;
+
+        try
+        {
+            // Si pas attaché / pas visible / taille nulle → masquer le thumbnail mais le garder enregistré
+            bool visible = IsVisible && ActualWidth > 1 && ActualHeight > 1 && PresentationSource.FromVisual(this) != null;
+
+            RECT destRect = default;
+            if (visible)
+            {
+                var root = _hwndSource.RootVisual;
+                if (root == null) { SetVisibility(false); return; }
+
+                // Rect de notre élément dans le repère de la Window WPF (en DIPs)
+                var transform = TransformToAncestor(root);
+                var dipRect = transform.TransformBounds(new Rect(0, 0, ActualWidth, ActualHeight));
+
+                // Si totalement hors de la window, masquer
+                var windowBounds = new Rect(0, 0, root.RenderSize.Width, root.RenderSize.Height);
+                if (!windowBounds.IntersectsWith(dipRect))
                 {
-                    Logger.Debug($"DwmRegisterThumbnail a échoué (hr=0x{hr:X})");
-                    _thumb = IntPtr.Zero;
+                    SetVisibility(false);
                     return;
                 }
+
+                // Clip au bord de la Window pour ne jamais peindre à côté
+                dipRect.Intersect(windowBounds);
+
+                // Conversion DIP → device pixels (DPI aware)
+                var m = _hwndSource.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+                var tl = m.Transform(new Point(dipRect.Left, dipRect.Top));
+                var br = m.Transform(new Point(dipRect.Right, dipRect.Bottom));
+
+                // Taille source (si 0, la fenêtre est minimisée ou cloakée → masquer)
+                NativeMethods.DwmQueryThumbnailSourceSize(_thumb, out var srcSize);
+                if (srcSize.cx <= 0 || srcSize.cy <= 0)
+                {
+                    SetVisibility(false);
+                    return;
+                }
+
+                // Rectangle cible préservant le ratio, centré dans dipRect (en device pixels)
+                int destW = (int)Math.Max(1, br.X - tl.X);
+                int destH = (int)Math.Max(1, br.Y - tl.Y);
+                double scale = Math.Min((double)destW / srcSize.cx, (double)destH / srcSize.cy);
+                int fittedW = Math.Max(1, (int)(srcSize.cx * scale));
+                int fittedH = Math.Max(1, (int)(srcSize.cy * scale));
+
+                int fittedX = (int)tl.X + (destW - fittedW) / 2;
+                int fittedY = (int)tl.Y + (destH - fittedH) / 2;
+
+                destRect = new RECT
+                {
+                    Left = fittedX,
+                    Top = fittedY,
+                    Right = fittedX + fittedW,
+                    Bottom = fittedY + fittedH
+                };
             }
-
-            // Taille source
-            NativeMethods.DwmQueryThumbnailSourceSize(_thumb, out var srcSize);
-
-            // Calculer un rect destination préservant le ratio, dans les bornes de l'host
-            int targetW = (int)Math.Max(1, ActualWidth);
-            int targetH = (int)Math.Max(1, ActualHeight);
-            int destW = targetW, destH = targetH;
-
-            if (srcSize.cx > 0 && srcSize.cy > 0)
+            else
             {
-                double scale = Math.Min((double)targetW / srcSize.cx, (double)targetH / srcSize.cy);
-                destW = Math.Max(1, (int)(srcSize.cx * scale));
-                destH = Math.Max(1, (int)(srcSize.cy * scale));
+                SetVisibility(false);
+                return;
             }
-
-            int x = (targetW - destW) / 2;
-            int y = (targetH - destH) / 2;
 
             var props = new DWM_THUMBNAIL_PROPERTIES
             {
@@ -125,22 +177,43 @@ public sealed class DwmThumbnailHost : HwndHost
                         | NativeConstants.DWM_TNP_RECTDESTINATION
                         | NativeConstants.DWM_TNP_OPACITY
                         | NativeConstants.DWM_TNP_SOURCECLIENTAREAONLY,
-                rcDestination = new RECT { Left = x, Top = y, Right = x + destW, Bottom = y + destH },
+                rcDestination = destRect,
                 opacity = 255,
                 fVisible = true,
                 fSourceClientAreaOnly = false
             };
 
-            NativeMethods.DwmUpdateThumbnailProperties(_thumb, ref props);
+            int hr = NativeMethods.DwmUpdateThumbnailProperties(_thumb, ref props);
+            if (hr != 0)
+            {
+                Logger.Debug($"DwmUpdateThumbnailProperties hr=0x{hr:X}");
+                // Si l'update échoue trop souvent, on désinscrit proprement
+                Unregister();
+            }
         }
         catch (Exception ex)
         {
-            Logger.Warn("DwmThumbnailHost.UpdateThumbnail a échoué", ex);
-            UnregisterThumb();
+            Logger.Debug($"UpdateThumbnailRect exception ignorée: {ex.Message}");
+            Unregister();
         }
     }
 
-    private void UnregisterThumb()
+    private void SetVisibility(bool visible)
+    {
+        if (!_registered || _thumb == IntPtr.Zero) return;
+        try
+        {
+            var props = new DWM_THUMBNAIL_PROPERTIES
+            {
+                dwFlags = NativeConstants.DWM_TNP_VISIBLE,
+                fVisible = visible
+            };
+            NativeMethods.DwmUpdateThumbnailProperties(_thumb, ref props);
+        }
+        catch { /* ignore */ }
+    }
+
+    private void Unregister()
     {
         if (_thumb != IntPtr.Zero)
         {
@@ -148,59 +221,14 @@ public sealed class DwmThumbnailHost : HwndHost
             catch { /* ignore */ }
             _thumb = IntPtr.Zero;
         }
+        _registered = false;
     }
 
-    // ====== Win32 helpers locaux (classe fenêtre minimale) ======
-    private static bool _classRegistered;
-    private static void EnsureClassRegistered()
+    protected override Size MeasureOverride(Size availableSize)
     {
-        if (_classRegistered) return;
-
-        WNDCLASS wc = new()
-        {
-            lpszClassName = ChildClassName,
-            lpfnWndProc = DefWindowProcDelegate,
-            hInstance = GetModuleHandle(null)
-        };
-        RegisterClass(ref wc);
-        _classRegistered = true;
-    }
-
-    private delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-    private static readonly WndProc DefWindowProcDelegate = DefWindowProc;
-
-    [DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
-    private static extern IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-    [DllImport("user32.dll", EntryPoint = "CreateWindowExW", CharSet = CharSet.Unicode)]
-    private static extern IntPtr CreateWindowEx(int dwExStyle, string lpClassName, string lpWindowName,
-        int dwStyle, int x, int y, int nWidth, int nHeight,
-        IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
-
-    [DllImport("user32.dll")]
-    private static extern bool DestroyWindow(IntPtr hWnd);
-
-    [DllImport("user32.dll", EntryPoint = "RegisterClassW", CharSet = CharSet.Unicode)]
-    private static extern ushort RegisterClass([In] ref WNDCLASS lpWndClass);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    private static extern IntPtr GetModuleHandle(string? lpModuleName);
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    private struct WNDCLASS
-    {
-        public uint style;
-        [MarshalAs(UnmanagedType.FunctionPtr)]
-        public WndProc lpfnWndProc;
-        public int cbClsExtra;
-        public int cbWndExtra;
-        public IntPtr hInstance;
-        public IntPtr hIcon;
-        public IntPtr hCursor;
-        public IntPtr hbrBackground;
-        [MarshalAs(UnmanagedType.LPWStr)]
-        public string? lpszMenuName;
-        [MarshalAs(UnmanagedType.LPWStr)]
-        public string lpszClassName;
+        // Ne consomme aucune place par lui-même — la Grid parente donne la taille
+        return new Size(
+            double.IsPositiveInfinity(availableSize.Width) ? 0 : availableSize.Width,
+            double.IsPositiveInfinity(availableSize.Height) ? 0 : availableSize.Height);
     }
 }
