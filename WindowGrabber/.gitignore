@@ -1,0 +1,35 @@
+## Build outputs
+bin/
+obj/
+out/
+publish/
+
+## VS / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Rider test run
+**/TestResults/
+
+## ReSharper
+_ReSharper*/
+
+## NuGet
+*.nupkg
+packages/
+.nuget/
+
+## JetBrains
+*.DotSettings.user
+
+## Logs
+*.log
+logs/
+
+## OS
+Thumbs.db
+.DS_Store

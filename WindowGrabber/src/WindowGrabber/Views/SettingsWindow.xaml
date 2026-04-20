@@ -1,0 +1,83 @@
+<Window x:Class="WindowGrabber.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Paramètres · Window Grabber"
+        Width="520" Height="560"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource BgBrush}"
+        FontFamily="{StaticResource UiFont}"
+        Foreground="{StaticResource TextPrimaryBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Titre -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Paramètres"
+                       FontSize="22" FontWeight="SemiBold"
+                       Foreground="{StaticResource TextPrimaryBrush}" />
+            <TextBlock Text="Les préférences sont enregistrées dans %APPDATA%\WindowGrabber\settings.json"
+                       FontSize="{StaticResource FontSizeSmall}"
+                       Foreground="{StaticResource TextMutedBrush}"
+                       Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- Options -->
+        <StackPanel Grid.Row="1">
+            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Affichage" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,0,0,10" />
+                    <CheckBox Content="Activer les miniatures live (DWM)"
+                              IsChecked="{Binding LiveThumbnailsEnabled}"
+                              Margin="0,4" />
+                    <CheckBox Content="Afficher le type de connexion des écrans"
+                              IsChecked="{Binding ShowConnectionType}"
+                              Margin="0,4" />
+                    <CheckBox Content="Masquer les fenêtres système"
+                              IsChecked="{Binding HideSystemWindows}"
+                              Margin="0,4" />
+                    <CheckBox Content="Thème sombre"
+                              IsChecked="{Binding DarkTheme}"
+                              IsEnabled="False"
+                              Margin="0,4" />
+                    <TextBlock Text="(V1 : thème clair prévu dans une version ultérieure)"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Margin="24,0,0,0" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <TextBlock Text="Diagnostic" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,0,0,10" />
+                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap">
+                        Fichier journal :
+                    </TextBlock>
+                    <TextBlock Text="{Binding LogFilePath}"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               FontFamily="{StaticResource UiFontMono}"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               TextWrapping="Wrap"
+                               Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Pied -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Button Content="Fermer"
+                    Style="{StaticResource PrimaryButton}"
+                    HorizontalAlignment="Right"
+                    Click="Close_Click"
+                    MinWidth="120" />
+        </Grid>
+    </Grid>
+</Window>
