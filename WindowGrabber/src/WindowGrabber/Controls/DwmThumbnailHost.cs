@@ -116,7 +116,7 @@ public sealed class DwmThumbnailHost : FrameworkElement
             RECT destRect = default;
             if (visible)
             {
-                var root = _hwndSource.RootVisual;
+                var root = _hwndSource.RootVisual as UIElement;
                 if (root == null) { SetVisibility(false); return; }
 
                 // Rect de notre élément dans le repère de la Window WPF (en DIPs)

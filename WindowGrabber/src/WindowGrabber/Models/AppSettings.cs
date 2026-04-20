@@ -5,7 +5,7 @@ namespace WindowGrabber.Models;
 /// </summary>
 public sealed class AppSettings
 {
-    public bool LiveThumbnailsEnabled { get; set; } = true;
+    public bool LiveThumbnailsEnabled { get; set; } = false;
     public bool ShowConnectionType { get; set; } = true;
     public bool HideSystemWindows { get; set; } = true;
     public bool DarkTheme { get; set; } = true;

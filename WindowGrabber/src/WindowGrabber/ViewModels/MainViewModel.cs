@@ -194,8 +194,8 @@ public sealed class MainViewModel : ViewModelBase
         StatusMessage = ok
             ? $"« {Trim(vm.Title, 60)} » ramenée sur {TargetMonitor.DisplayLabel}"
             : $"Impossible de déplacer « {Trim(vm.Title, 60)} »";
-        // On rafraîchit pour refléter le nouveau monitor
-        Refresh();
+        // Mode léger : on ne ré-énumère pas tout après un grab. L'utilisateur peut
+        // cliquer sur « Actualiser » s'il veut voir le nouvel état reflété dans la liste.
     }
 
     public void SaveSettings() => _settingsService.Save(Settings);

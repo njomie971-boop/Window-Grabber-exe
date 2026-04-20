@@ -65,7 +65,9 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        _vm.Refresh();
+        // Mode léger : on laisse l'UI se peindre d'abord puis on énumère les fenêtres
+        // en tâche de fond (priorité ContextIdle). Démarrage quasi instantané.
+        Dispatcher.BeginInvoke(new Action(() => _vm.Refresh()), System.Windows.Threading.DispatcherPriority.ContextIdle);
     }
 
     private void OnClosed(object? sender, EventArgs e)
