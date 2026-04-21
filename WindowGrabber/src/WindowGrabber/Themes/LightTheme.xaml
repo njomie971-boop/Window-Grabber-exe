@@ -2,21 +2,21 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
-    <!-- ====== PALETTE SOMBRE ====== -->
-    <Color x:Key="BgColor">#FF0B0F14</Color>
-    <Color x:Key="SurfaceColor">#FF121821</Color>
-    <Color x:Key="SurfaceElevatedColor">#FF1A2230</Color>
-    <Color x:Key="SurfaceHoverColor">#FF222E40</Color>
-    <Color x:Key="BorderColor">#FF223041</Color>
-    <Color x:Key="BorderStrongColor">#FF2D3E55</Color>
-    <Color x:Key="AccentColor">#FF3FA7FF</Color>
-    <Color x:Key="AccentSoftColor">#332F8BE0</Color>
-    <Color x:Key="AccentGreenColor">#FF2EE6A5</Color>
-    <Color x:Key="AccentOrangeColor">#FFFFA24C</Color>
-    <Color x:Key="TextPrimaryColor">#FFE6EEF7</Color>
-    <Color x:Key="TextSecondaryColor">#FF8AA0B8</Color>
-    <Color x:Key="TextMutedColor">#FF5E7491</Color>
-    <Color x:Key="DangerColor">#FFFF6B6B</Color>
+    <!-- ====== PALETTE CLAIRE ====== -->
+    <Color x:Key="BgColor">#FFF4F6FA</Color>
+    <Color x:Key="SurfaceColor">#FFFFFFFF</Color>
+    <Color x:Key="SurfaceElevatedColor">#FFFBFCFE</Color>
+    <Color x:Key="SurfaceHoverColor">#FFEEF2F8</Color>
+    <Color x:Key="BorderColor">#FFDDE3EC</Color>
+    <Color x:Key="BorderStrongColor">#FFBAC5D5</Color>
+    <Color x:Key="AccentColor">#FF2572D6</Color>
+    <Color x:Key="AccentSoftColor">#332572D6</Color>
+    <Color x:Key="AccentGreenColor">#FF0FA673</Color>
+    <Color x:Key="AccentOrangeColor">#FFDE6E16</Color>
+    <Color x:Key="TextPrimaryColor">#FF0F1724</Color>
+    <Color x:Key="TextSecondaryColor">#FF3F5169</Color>
+    <Color x:Key="TextMutedColor">#FF6B7A91</Color>
+    <Color x:Key="DangerColor">#FFCC3A3A</Color>
 
     <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
@@ -33,7 +33,10 @@
     <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
 
-    <!-- Typographie -->
+    <!-- Bouton primaire : texte foncé sur accent pour contraste -->
+    <SolidColorBrush x:Key="PrimaryButtonForegroundBrush" Color="#FFFFFFFF" />
+
+    <!-- Typographie (identique) -->
     <FontFamily x:Key="UiFont">Segoe UI Variable Display, Segoe UI Variable, Segoe UI, sans-serif</FontFamily>
     <FontFamily x:Key="UiFontMono">Cascadia Mono, Consolas, monospace</FontFamily>
     <sys:Double x:Key="FontSizeLarge">20</sys:Double>
@@ -41,7 +44,7 @@
     <sys:Double x:Key="FontSizeBody">13</sys:Double>
     <sys:Double x:Key="FontSizeSmall">11.5</sys:Double>
 
-    <!-- Styles communs partagés avec LightTheme -->
+    <!-- Inclure la fiche de styles partagée : styles communs à Dark / Light -->
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/WindowGrabber;component/Themes/SharedStyles.xaml" />
     </ResourceDictionary.MergedDictionaries>

@@ -19,6 +19,7 @@ public sealed class WindowInfo
     public required string MonitorId { get; init; }
     public required string MonitorLabel { get; init; }
     public required int MonitorIndex { get; init; }
+    public string MonitorDeviceName { get; init; } = string.Empty;
     public BitmapSource? Icon { get; init; }
     public string ClassName { get; init; } = string.Empty;
 }

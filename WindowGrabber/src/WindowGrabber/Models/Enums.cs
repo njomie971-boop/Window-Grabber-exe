@@ -21,3 +21,10 @@ public enum ConnectionType
     Component,
     Other
 }
+
+public enum ThemeMode
+{
+    System,
+    Dark,
+    Light
+}

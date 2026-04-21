@@ -10,112 +10,124 @@
     <UserControl.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolToVis" />
         <conv:NullToVisibilityConverter x:Key="NullToVis" />
-        <conv:IsOnTargetToBrushConverter x:Key="TargetToBrush" />
     </UserControl.Resources>
 
-    <!-- Un seul Style : celui de la ressource, avec Trigger de hover -->
     <Border x:Name="Root"
             Cursor="Hand"
-            Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{Binding IsOnTargetMonitor, Mode=OneWay, Converter={StaticResource TargetToBrush}}"
+            Background="{DynamicResource SurfaceBrush}"
             BorderThickness="1"
             MouseLeftButtonUp="Root_OnMouseLeftButtonUp">
-        <Border.RenderTransform>
-            <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" CenterX="0.5" CenterY="0.5" />
-        </Border.RenderTransform>
+        <!-- Border change selon IsOnTargetMonitor -->
         <Border.Style>
             <Style TargetType="Border" BasedOn="{StaticResource CardBorder}">
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsOnTargetMonitor, Mode=OneWay}" Value="True">
+                        <Setter Property="BorderBrush" Value="{Binding MonitorBrush, Mode=OneWay}" />
+                    </DataTrigger>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="{StaticResource SurfaceElevatedBrush}" />
+                        <Setter Property="Background" Value="{DynamicResource SurfaceElevatedBrush}" />
                     </Trigger>
                 </Style.Triggers>
             </Style>
         </Border.Style>
 
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <!-- Zone miniature : fallback TOUJOURS visible ; si DWM réussit, il peint par-dessus -->
-            <Border Grid.Row="0"
-                    Background="#FF0E131B"
-                    BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    MinHeight="110"
-                    ClipToBounds="True">
-                <Grid>
-                    <!-- Fallback icône (couche inférieure, toujours présent) -->
-                    <Grid x:Name="Fallback">
-                        <Image Source="{Binding Icon, Mode=OneWay}"
-                               Width="56" Height="56"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               RenderOptions.BitmapScalingMode="HighQuality"
-                               Visibility="{Binding Icon, Mode=OneWay, Converter={StaticResource NullToVis}}" />
-                        <TextBlock Text="■"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   FontSize="36"
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   Visibility="{Binding Icon, Mode=OneWay, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
+            <!-- Bande de couleur du moniteur -->
+            <Border Grid.Column="0"
+                    Background="{Binding MonitorBrush, Mode=OneWay}"
+                    CornerRadius="12,0,0,12"
+                    Margin="-14,-14,0,-14" />
+
+            <Grid Grid.Column="1" Margin="10,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Zone miniature : fallback toujours visible, DWM peint par-dessus si succès -->
+                <Border Grid.Row="0"
+                        Background="{DynamicResource SurfaceElevatedBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        MinHeight="110"
+                        ClipToBounds="True">
+                    <Grid>
+                        <Grid x:Name="Fallback">
+                            <Image Source="{Binding Icon, Mode=OneWay}"
+                                   Width="56" Height="56"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   Visibility="{Binding Icon, Mode=OneWay, Converter={StaticResource NullToVis}}" />
+                            <TextBlock Text="■" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="36" Foreground="{DynamicResource TextMutedBrush}"
+                                       Visibility="{Binding Icon, Mode=OneWay, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
+                        </Grid>
+
+                        <ctrl:DwmThumbnailHost x:Name="Thumbnail" />
+
+                        <!-- Badge état -->
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
+                                Style="{DynamicResource Badge}" Panel.ZIndex="10">
+                            <TextBlock Text="{Binding StateLabel, Mode=OneWay}"
+                                       FontSize="{DynamicResource FontSizeSmall}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </Border>
+
+                        <!-- Badge moniteur cible -->
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6"
+                                Padding="8,3" CornerRadius="999"
+                                BorderThickness="1"
+                                Panel.ZIndex="10"
+                                BorderBrush="{Binding MonitorBrush, Mode=OneWay}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                Visibility="{Binding IsOnTargetMonitor, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="sur moniteur cible"
+                                       FontSize="{DynamicResource FontSizeSmall}"
+                                       Foreground="{Binding MonitorBrush, Mode=OneWay}"
+                                       FontWeight="SemiBold" />
+                        </Border>
                     </Grid>
+                </Border>
 
-                    <!-- DWM live thumbnail : couche supérieure, réserve l'espace et DWM peint à ces coordonnées -->
-                    <ctrl:DwmThumbnailHost x:Name="Thumbnail" />
-
-                    <!-- Badges par-dessus tout -->
-                    <Border HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Margin="6"
-                            Style="{StaticResource Badge}"
-                            Panel.ZIndex="10">
-                        <TextBlock Text="{Binding StateLabel, Mode=OneWay}"
-                                   FontSize="{StaticResource FontSizeSmall}"
-                                   Foreground="{StaticResource TextSecondaryBrush}" />
-                    </Border>
-
-                    <Border HorizontalAlignment="Left" VerticalAlignment="Top"
-                            Margin="6"
-                            Style="{StaticResource BadgeAccent}"
-                            Panel.ZIndex="10"
-                            Visibility="{Binding IsOnTargetMonitor, Mode=OneWay, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="sur moniteur cible"
-                                   FontSize="{StaticResource FontSizeSmall}"
-                                   Foreground="{StaticResource AccentBrush}" />
-                    </Border>
-                </Grid>
-            </Border>
-
-            <!-- Titre + meta -->
-            <StackPanel Grid.Row="1" Margin="2,10,2,0">
-                <TextBlock Text="{Binding Title, Mode=OneWay}"
-                           FontSize="{StaticResource FontSizeBody}"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"
-                           TextTrimming="CharacterEllipsis"
-                           TextWrapping="NoWrap" />
-                <Grid Margin="0,6,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0"
-                               Text="{Binding ProcessName, Mode=OneWay}"
-                               FontSize="{StaticResource FontSizeSmall}"
-                               Foreground="{StaticResource TextSecondaryBrush}"
+                <!-- Titre + meta -->
+                <StackPanel Grid.Row="1" Margin="2,10,2,0">
+                    <TextBlock Text="{Binding Title, Mode=OneWay}"
+                               FontSize="{DynamicResource FontSizeBody}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
                                TextTrimming="CharacterEllipsis"
                                TextWrapping="NoWrap" />
-                    <Border Grid.Column="1" Style="{StaticResource Badge}">
-                        <TextBlock Text="{Binding MonitorLabel, Mode=OneWay}"
-                                   FontSize="{StaticResource FontSizeSmall}"
-                                   Foreground="{StaticResource AccentBrush}"
-                                   FontWeight="SemiBold" />
-                    </Border>
-                </Grid>
-            </StackPanel>
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding ProcessName, Mode=OneWay}"
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap" />
+                        <Border Grid.Column="1"
+                                Padding="8,3" CornerRadius="999"
+                                BorderThickness="1"
+                                BorderBrush="{Binding MonitorBrush, Mode=OneWay}"
+                                Background="Transparent">
+                            <TextBlock Text="{Binding MonitorLabel, Mode=OneWay}"
+                                       FontSize="{DynamicResource FontSizeSmall}"
+                                       Foreground="{Binding MonitorBrush, Mode=OneWay}"
+                                       FontWeight="SemiBold" />
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>

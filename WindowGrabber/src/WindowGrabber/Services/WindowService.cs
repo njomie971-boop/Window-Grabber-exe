@@ -151,6 +151,7 @@ public sealed class WindowService
             MonitorId = monitor.Id,
             MonitorLabel = monitor.DisplayLabel,
             MonitorIndex = monitor.Index,
+            MonitorDeviceName = monitor.DeviceName,
             Icon = icon,
             ClassName = className
         };

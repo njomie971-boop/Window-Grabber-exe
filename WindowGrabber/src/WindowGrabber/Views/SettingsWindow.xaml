@@ -2,12 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Paramètres · Window Grabber"
-        Width="520" Height="560"
+        Width="600" Height="720"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="{StaticResource BgBrush}"
-        FontFamily="{StaticResource UiFont}"
-        Foreground="{StaticResource TextPrimaryBrush}">
+        Background="{DynamicResource BgBrush}"
+        FontFamily="{DynamicResource UiFont}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,69 +15,203 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Titre -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="Paramètres"
-                       FontSize="22" FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}" />
-            <TextBlock Text="Les préférences sont enregistrées dans %APPDATA%\WindowGrabber\settings.json"
-                       FontSize="{StaticResource FontSizeSmall}"
-                       Foreground="{StaticResource TextMutedBrush}"
-                       Margin="0,4,0,0" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="Paramètres" FontSize="22" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" />
+            <TextBlock Text="Préférences enregistrées dans %APPDATA%\WindowGrabber\settings.json"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,4,0,0" />
         </StackPanel>
 
-        <!-- Options -->
-        <StackPanel Grid.Row="1">
-            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock Text="Affichage" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               Margin="0,0,0,10" />
-                    <CheckBox Content="Activer les miniatures live (DWM)"
-                              IsChecked="{Binding LiveThumbnailsEnabled}"
-                              Margin="0,4" />
-                    <CheckBox Content="Afficher le type de connexion des écrans"
-                              IsChecked="{Binding ShowConnectionType}"
-                              Margin="0,4" />
-                    <CheckBox Content="Masquer les fenêtres système"
-                              IsChecked="{Binding HideSystemWindows}"
-                              Margin="0,4" />
-                    <CheckBox Content="Thème sombre"
-                              IsChecked="{Binding DarkTheme}"
-                              IsEnabled="False"
-                              Margin="0,4" />
-                    <TextBlock Text="(V1 : thème clair prévu dans une version ultérieure)"
-                               FontSize="{StaticResource FontSizeSmall}"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               Margin="24,0,0,0" />
-                </StackPanel>
-            </Border>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
 
-            <Border Style="{StaticResource CardBorder}">
-                <StackPanel>
-                    <TextBlock Text="Diagnostic" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               Margin="0,0,0,10" />
-                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap">
-                        Fichier journal :
-                    </TextBlock>
-                    <TextBlock Text="{Binding LogFilePath, Mode=OneWay}"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               FontFamily="{StaticResource UiFontMono}"
-                               FontSize="{StaticResource FontSizeSmall}"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
-                </StackPanel>
-            </Border>
-        </StackPanel>
+                <!-- ========== Thème ========== -->
+                <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Apparence" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center">
+                                <Run Text="Thème" FontWeight="SemiBold" />
+                                <LineBreak />
+                                <Run Text="Système suit automatiquement les paramètres Windows"
+                                     Foreground="{DynamicResource TextMutedBrush}"
+                                     FontSize="{DynamicResource FontSizeSmall}" />
+                            </TextBlock>
+                            <ComboBox Grid.Column="1" Width="180"
+                                      SelectedIndex="{Binding ThemeIndex, Mode=TwoWay}"
+                                      VerticalAlignment="Center">
+                                <ComboBoxItem Content="Système (auto)" />
+                                <ComboBoxItem Content="Sombre" />
+                                <ComboBoxItem Content="Clair" />
+                            </ComboBox>
+                        </Grid>
+                        <TextBlock Text="Le changement de thème prend effet au prochain lancement."
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
 
-        <!-- Pied -->
-        <Grid Grid.Row="2" Margin="0,16,0,0">
-            <Button Content="Fermer"
-                    Style="{StaticResource PrimaryButton}"
-                    HorizontalAlignment="Right"
-                    Click="Close_Click"
-                    MinWidth="120" />
+                <!-- ========== Affichage ========== -->
+                <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Affichage" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <CheckBox Content="Activer les miniatures live (DWM)"
+                                  IsChecked="{Binding LiveThumbnailsEnabled}" Margin="0,4" />
+                        <CheckBox Content="Afficher le type de connexion des écrans"
+                                  IsChecked="{Binding ShowConnectionType}" Margin="0,4" />
+                        <CheckBox Content="Masquer les fenêtres système"
+                                  IsChecked="{Binding HideSystemWindows}" Margin="0,4" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== Actualisation ========== -->
+                <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Actualisation automatique" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <CheckBox Content="Rafraîchir après déplacement de la fenêtre Window Grabber"
+                                  IsChecked="{Binding AutoRefreshOnMove}" Margin="0,4" />
+                        <CheckBox Content="Rafraîchir à l'ouverture / fermeture d'une fenêtre (au premier plan uniquement)"
+                                  IsChecked="{Binding AutoRefreshOnWindowEvents}" Margin="0,4" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== Couleurs par moniteur ========== -->
+                <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Couleurs par moniteur" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Réinitialiser"
+                                    Style="{DynamicResource GhostButton}"
+                                    Command="{Binding ResetColorsCommand}"
+                                    Padding="10,4" />
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding MonitorColorEntries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,6,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="14" Height="14"
+                                                CornerRadius="3" VerticalAlignment="Center"
+                                                Background="{Binding CurrentBrush, Mode=OneWay}" />
+                                        <TextBlock Grid.Column="1" Margin="10,0" VerticalAlignment="Center">
+                                            <Run Text="{Binding Monitor.DisplayLabel, Mode=OneWay}" FontWeight="SemiBold" />
+                                            <Run Text="  " />
+                                            <Run Text="{Binding Monitor.DeviceName, Mode=OneWay}"
+                                                 Foreground="{DynamicResource TextMutedBrush}"
+                                                 FontSize="{DynamicResource FontSizeSmall}" />
+                                        </TextBlock>
+                                        <ItemsControl Grid.Column="2" ItemsSource="{Binding Swatches}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Command="{Binding PickCommand}"
+                                                            Margin="2,0"
+                                                            Width="22" Height="22"
+                                                            Cursor="Hand"
+                                                            ToolTip="{Binding Hex}">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="Bd"
+                                                                        Background="{Binding SwatchBrush}"
+                                                                        BorderBrush="{DynamicResource BorderStrongBrush}"
+                                                                        BorderThickness="1"
+                                                                        CornerRadius="6" />
+                                                                <ControlTemplate.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TextPrimaryBrush}" />
+                                                                        <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                                                                    </DataTrigger>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== Raccourci global ========== -->
+                <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Raccourci global" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <CheckBox Content="Activer le raccourci global pour ouvrir Window Grabber"
+                                  IsChecked="{Binding HotKeyEnabled}" Margin="0,4" />
+                        <Grid Margin="24,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Combinaison :" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <TextBox Grid.Column="1" Margin="10,0,0,0"
+                                     Text="{Binding HotKey, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                     IsEnabled="{Binding HotKeyEnabled}" />
+                        </Grid>
+                        <TextBlock Text="Exemples : Ctrl+Alt+W · Shift+Win+G · Ctrl+Shift+F10"
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="24,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== Démarrage Windows ========== -->
+                <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Démarrage" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <CheckBox Content="Lancer Window Grabber au démarrage de Windows"
+                                  IsChecked="{Binding RunAtStartup}" Margin="0,4" />
+                        <TextBlock Text="Stocké dans HKCU\…\Run · Réversible à tout moment"
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="24,4,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== Diagnostic ========== -->
+                <Border Style="{DynamicResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Diagnostic" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <TextBlock Text="Fichier journal :"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                        <TextBlock Text="{Binding LogFilePath, Mode=OneWay}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   FontFamily="{DynamicResource UiFontMono}"
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <Button Content="Fermer" Style="{DynamicResource PrimaryButton}"
+                    HorizontalAlignment="Right" Click="Close_Click" MinWidth="120" />
         </Grid>
     </Grid>
 </Window>

@@ -13,6 +13,7 @@ public sealed class MainViewModel : ViewModelBase
     private readonly WindowService _windowService;
     private readonly WindowMover _windowMover;
     private readonly SettingsService _settingsService;
+    private readonly MonitorColorService _colorService;
 
     public AppSettings Settings { get; }
 
@@ -30,11 +31,24 @@ public sealed class MainViewModel : ViewModelBase
             {
                 Raise(nameof(TargetMonitorLabel));
                 Raise(nameof(TargetMonitorDetails));
+                Raise(nameof(TargetMonitorBrush));
             }
         }
     }
 
     public string TargetMonitorLabel => TargetMonitor?.DisplayLabel ?? "—";
+
+    public System.Windows.Media.Brush TargetMonitorBrush
+    {
+        get
+        {
+            if (TargetMonitor == null) return System.Windows.Media.Brushes.DeepSkyBlue;
+            var c = _colorService.GetColor(TargetMonitor);
+            var b = new System.Windows.Media.SolidColorBrush(c);
+            b.Freeze();
+            return b;
+        }
+    }
 
     public string TargetMonitorDetails
     {
@@ -99,12 +113,14 @@ public sealed class MainViewModel : ViewModelBase
         WindowService windowService,
         WindowMover windowMover,
         SettingsService settingsService,
+        MonitorColorService colorService,
         AppSettings settings)
     {
         _monitorService = monitorService;
         _windowService = windowService;
         _windowMover = windowMover;
         _settingsService = settingsService;
+        _colorService = colorService;
         Settings = settings;
 
         WindowsView = CollectionViewSource.GetDefaultView(Windows);
@@ -151,6 +167,14 @@ public sealed class MainViewModel : ViewModelBase
 
             // 1. Monitors
             var monitors = _monitorService.GetMonitors(Settings.ShowConnectionType);
+            // Assigner une brosse d'accent à chaque moniteur (depuis les préférences utilisateur ou palette par défaut)
+            foreach (var m in monitors)
+            {
+                var c = _colorService.GetColor(m);
+                var b = new System.Windows.Media.SolidColorBrush(c);
+                b.Freeze();
+                m.AccentBrush = b;
+            }
             Monitors.Clear();
             foreach (var m in monitors) Monitors.Add(m);
 
@@ -170,6 +194,10 @@ public sealed class MainViewModel : ViewModelBase
             foreach (var w in windows)
             {
                 var vm = new WindowItemViewModel(w) { IsOnTargetMonitor = target != null && w.MonitorId == target.Id };
+                var c = _colorService.GetColor(w.MonitorDeviceName, w.MonitorIndex);
+                var brush = new System.Windows.Media.SolidColorBrush(c);
+                brush.Freeze();
+                vm.MonitorBrush = brush;
                 Windows.Add(vm);
             }
 

@@ -47,16 +47,21 @@
                 <!-- Logo + titre -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Image Source="pack://application:,,,/Resources/logo.png"
-                           Width="36" Height="36" Margin="0,0,14,0"
+                           Width="52" Height="52" Margin="0,0,16,0"
                            RenderOptions.BitmapScalingMode="HighQuality" />
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Window Grabber"
-                                   FontSize="{StaticResource FontSizeLarge}"
+                                   FontSize="{DynamicResource FontSizeLarge}"
                                    FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="By Super Bokit"
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   FontWeight="SemiBold"
+                                   Margin="0,2,0,0" />
                         <TextBlock Text="Ramène n'importe quelle fenêtre sur l'écran où vous êtes"
-                                   FontSize="{StaticResource FontSizeSmall}"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                    Margin="0,2,0,0" />
                     </StackPanel>
                 </StackPanel>
@@ -65,18 +70,19 @@
                 <Border Grid.Column="1"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
                         Padding="16,10"
-                        Background="{StaticResource AccentSoftBrush}"
-                        BorderBrush="{StaticResource AccentBrush}"
+                        Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{Binding TargetMonitorBrush, Mode=OneWay}"
                         BorderThickness="1"
                         CornerRadius="999">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="8" Height="8" Fill="{StaticResource AccentGreenBrush}"
+                        <Ellipse Width="10" Height="10"
+                                 Fill="{Binding TargetMonitorBrush, Mode=OneWay}"
                                  VerticalAlignment="Center" Margin="0,0,10,0" />
                         <TextBlock VerticalAlignment="Center">
-                            <Run Text="Moniteur cible · " Foreground="{StaticResource TextSecondaryBrush}" />
-                            <Run Text="{Binding TargetMonitorLabel, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <Run Text="Moniteur cible · " Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <Run Text="{Binding TargetMonitorLabel, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
                             <Run Text="   " />
-                            <Run Text="{Binding TargetMonitorDetails, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" FontSize="{StaticResource FontSizeSmall}" />
+                            <Run Text="{Binding TargetMonitorDetails, Mode=OneWay}" Foreground="{DynamicResource TextMutedBrush}" FontSize="{DynamicResource FontSizeSmall}" />
                         </TextBlock>
                     </StackPanel>
                 </Border>
@@ -162,12 +168,37 @@
                 <ComboBoxItem Content="Trier par application" />
             </ComboBox>
 
-            <!-- Recherche -->
-            <TextBox Grid.Column="2"
-                     Width="260"
-                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                     VerticalAlignment="Center"
-                     Tag="Rechercher une fenêtre…" />
+            <!-- Recherche avec loupe + placeholder -->
+            <Grid Grid.Column="2" Width="280" VerticalAlignment="Center">
+                <TextBox x:Name="SearchBox"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Padding="34,8,10,8" />
+                <!-- Loupe SVG -->
+                <Path Data="M7,2 C9.76,2 12,4.24 12,7 C12,8.22 11.56,9.34 10.83,10.21 L14.5,13.88 L13.88,14.5 L10.21,10.83 C9.34,11.56 8.22,12 7,12 C4.24,12 2,9.76 2,7 C2,4.24 4.24,2 7,2 Z M7,3.5 C5.07,3.5 3.5,5.07 3.5,7 C3.5,8.93 5.07,10.5 7,10.5 C8.93,10.5 10.5,8.93 10.5,7 C10.5,5.07 8.93,3.5 7,3.5 Z"
+                      Fill="{DynamicResource TextSecondaryBrush}"
+                      Width="16" Height="16"
+                      Stretch="Uniform"
+                      HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Margin="12,0,0,0"
+                      IsHitTestVisible="False" />
+                <!-- Placeholder -->
+                <TextBlock Text="Rechercher une fenêtre…"
+                           IsHitTestVisible="False"
+                           VerticalAlignment="Center"
+                           Margin="36,0,0,0"
+                           Foreground="{DynamicResource TextMutedBrush}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
         </Grid>
 
         <!-- ========== GRILLE DE CARTES ========== -->
@@ -224,6 +255,21 @@
                 <TextBlock Grid.Column="0"
                            Foreground="{StaticResource TextSecondaryBrush}">
                     <Run Text="{Binding WindowCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <Run Text=" fenêtre(s)" />
+                </TextBlock>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusMessage, Mode=OneWay}"
+                           HorizontalAlignment="Center"
+                           Foreground="{StaticResource TextMutedBrush}" />
+                <TextBlock Grid.Column="2"
+                           Text="Astuce : cliquez sur une carte pour ramener la fenêtre"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           FontSize="{StaticResource FontSizeSmall}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
+       <Run Text="{Binding WindowCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
                     <Run Text=" fenêtre(s)" />
                 </TextBlock>
                 <TextBlock Grid.Column="1"

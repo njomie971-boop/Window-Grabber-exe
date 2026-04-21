@@ -29,6 +29,9 @@ public sealed class MonitorInfo
 
     public ConnectionType Connection { get; set; } = ConnectionType.Unknown;
 
+    /// <summary>Brosse d'accent attribuée au moniteur (alimentée par MainViewModel).</summary>
+    public System.Windows.Media.Brush AccentBrush { get; set; } = System.Windows.Media.Brushes.DeepSkyBlue;
+
     /// <summary>Handle HMONITOR (utilisé uniquement par la couche interop).</summary>
     internal IntPtr HMonitor { get; init; }
 
