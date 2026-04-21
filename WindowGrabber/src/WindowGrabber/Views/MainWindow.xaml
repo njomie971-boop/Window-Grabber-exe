@@ -108,7 +108,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Pills moniteurs -->
+            <!-- Pills moniteurs : style moderne avec pastille colorée + rendu compact -->
             <ItemsControl Grid.Column="0" ItemsSource="{Binding Monitors}"
                           VerticalAlignment="Center">
                 <ItemsControl.ItemsPanel>
@@ -118,40 +118,46 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Margin="0,0,8,6"
-                                Padding="12,6"
-                                Background="{StaticResource SurfaceBrush}"
-                                BorderBrush="{StaticResource BorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="999">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryBrush}">
-                                    <Run Text="Moniteur " />
-                                    <Run Text="{Binding Index, Mode=OneWay}" />
-                                </TextBlock>
-                                <TextBlock Text="·" Margin="8,0"
-                                           Foreground="{StaticResource TextMutedBrush}" />
-                                <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
-                                    <Run Text="{Binding Width, Mode=OneWay}" />
-                                    <Run Text="×" />
-                                    <Run Text="{Binding Height, Mode=OneWay}" />
-                                </TextBlock>
-                                <TextBlock Text="·" Margin="8,0"
-                                           Foreground="{StaticResource TextMutedBrush}" />
-                                <TextBlock Foreground="{StaticResource TextMutedBrush}"
-                                           Text="{Binding Connection, Mode=OneWay, Converter={StaticResource ConnToText}}" />
-                                <Border Margin="10,0,0,0"
-                                        Background="{StaticResource AccentSoftBrush}"
-                                        CornerRadius="999"
-                                        Padding="6,1"
-                                        VerticalAlignment="Center"
-                                        Visibility="{Binding IsPrimary, Mode=OneWay, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="principal"
-                                               Foreground="{StaticResource AccentBrush}"
-                                               FontSize="{StaticResource FontSizeSmall}" />
-                                </Border>
-                            </StackPanel>
+                        <Border Margin="0,0,8,6" Style="{StaticResource MonitorPill}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <!-- Bande de couleur à gauche, couleur du moniteur -->
+                                <Border Grid.Column="0" Width="4"
+                                        Background="{Binding AccentBrush, Mode=OneWay}"
+                                        CornerRadius="10,0,0,10" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                            Margin="12,8,14,8" VerticalAlignment="Center">
+                                    <TextBlock FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}">
+                                        <Run Text="Moniteur " />
+                                        <Run Text="{Binding Index, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Text=" · " Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
+                                        <Run Text="{Binding Width, Mode=OneWay}" />
+                                        <Run Text="×" />
+                                        <Run Text="{Binding Height, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Text=" · " Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Foreground="{StaticResource TextMutedBrush}"
+                                               Text="{Binding Connection, Mode=OneWay, Converter={StaticResource ConnToText}}" />
+                                    <Border Margin="10,0,0,0"
+                                            Padding="7,1" CornerRadius="999"
+                                            BorderThickness="1"
+                                            BorderBrush="{Binding AccentBrush, Mode=OneWay}"
+                                            Background="Transparent"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsPrimary, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="principal"
+                                                   Foreground="{Binding AccentBrush, Mode=OneWay}"
+                                                   FontSize="{StaticResource FontSizeSmall}"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -255,21 +261,6 @@
                 <TextBlock Grid.Column="0"
                            Foreground="{StaticResource TextSecondaryBrush}">
                     <Run Text="{Binding WindowCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                    <Run Text=" fenêtre(s)" />
-                </TextBlock>
-                <TextBlock Grid.Column="1"
-                           Text="{Binding StatusMessage, Mode=OneWay}"
-                           HorizontalAlignment="Center"
-                           Foreground="{StaticResource TextMutedBrush}" />
-                <TextBlock Grid.Column="2"
-                           Text="Astuce : cliquez sur une carte pour ramener la fenêtre"
-                           Foreground="{StaticResource TextMutedBrush}"
-                           FontSize="{StaticResource FontSizeSmall}" />
-            </Grid>
-        </Border>
-    </Grid>
-</Window>
-       <Run Text="{Binding WindowCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
                     <Run Text=" fenêtre(s)" />
                 </TextBlock>
                 <TextBlock Grid.Column="1"
